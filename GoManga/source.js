@@ -463,7 +463,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GoManga = exports.GoMangaInfo = void 0;
 const types_1 = require("@paperback/types");
 exports.GoMangaInfo = {
-    version: '1.0.3',
+    version: '1.0.4',
     name: 'GoManga',
     icon: 'icon.png',
     author: 'fileuckigetweb',
@@ -637,9 +637,17 @@ class GoManga extends types_1.Source {
     async getSearchResults(query, metadata) {
         const page = metadata?.page ?? 1;
         const keyword = query.title?.trim() ?? '';
+        const order = metadata?.order ?? 'all';
+        const params = [];
+        if (order === 'popular' || order === 'update') {
+            params.push(`order=${order}`);
+        }
+        if (page > 1) {
+            params.push(`page=${page}`);
+        }
         const url = keyword
             ? `https://www.go-manga.com/?s=${encodeURIComponent(keyword)}${page > 1 ? `&paged=${page}` : ''}`
-            : `https://www.go-manga.com/manga/${page > 1 ? `?page=${page}` : ''}`;
+            : `https://www.go-manga.com/manga/${params.length ? '?' + params.join('&') : ''}`;
         const request = App.createRequest({
             url,
             method: 'GET'
