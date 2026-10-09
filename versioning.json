@@ -1,4 +1,4 @@
-﻿{
+{
     "buildTime":  "2026-10-09T14:08:23.108Z",
     "sources":  [
                     {
@@ -7,10 +7,10 @@
                         "author":  "fileuckigetweb",
                         "desc":  "GoManga source for Paperback",
                         "contentRating":  "EVERYONE",
-                        "version":  "1.0.0",
+                        "version":  "1.0.1",
                         "icon":  "icon.png",
                         "websiteBaseURL":  "https://www.go-manga.com",
-                        "intents":  1
+                        "intents":  5
                     }
                 ],
     "builtWith":  {

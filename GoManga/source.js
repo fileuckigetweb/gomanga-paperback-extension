@@ -470,7 +470,7 @@ exports.GoMangaInfo = {
     description: 'GoManga source for Paperback',
     contentRating: types_1.ContentRating.EVERYONE,
     websiteBaseURL: 'https://www.go-manga.com',
-    intents: types_1.SourceIntents.MANGA_CHAPTERS
+    intents: types_1.SourceIntents.MANGA_CHAPTERS | types_1.SourceIntents.HOMEPAGE_SECTIONS
 };
 class GoManga extends types_1.Source {
     constructor() {
@@ -545,13 +545,13 @@ class GoManga extends types_1.Source {
                 .replace(/^https?:\/\/[^/]+\/?/, '')
                 .replace(/^\/|\/$/g, '');
             const rawChapterNumber = item.attr('data-num') ?? '';
-            const numberMatch = name.match(/(?:chapter|ตอนที่|ตอน)\s*([0-9]+(?:\.[0-9]+)?)/i);
+            const numberMatch = name.match(/(?:chapter|เธ•เธญเธเธ—เธตเน|เธ•เธญเธ)\s*([0-9]+(?:\.[0-9]+)?)/i);
             const chapterNumber = Number.parseFloat(rawChapterNumber || numberMatch?.[1] || '0');
             chapters.push(App.createChapter({
                 id: chapterId,
                 chapNum: chapterNumber,
                 langCode: 'th',
-                name: name || `ตอนที่ ${index + 1}`,
+                name: name || `เธ•เธญเธเธ—เธตเน ${index + 1}`,
                 time: new Date()
             }));
         });
@@ -586,7 +586,7 @@ class GoManga extends types_1.Source {
                 }
             }
             catch {
-                // ข้ามข้อมูลที่ไม่ใช่ JSON ที่ถูกต้อง
+                // เธเนเธฒเธกเธเนเธญเธกเธนเธฅเธ—เธตเนเนเธกเนเนเธเน JSON เธ—เธตเนเธ–เธนเธเธ•เนเธญเธ
             }
         });
         return App.createChapterDetails({
@@ -594,6 +594,27 @@ class GoManga extends types_1.Source {
             mangaId,
             pages
         });
+    }
+    async getHomePageSections(sectionCallback) {
+        const section = App.createHomeSection({
+            id: 'latest',
+            title: 'เธกเธฑเธเธเธฐเธญเธฑเธเน€เธ”เธ•เธฅเนเธฒเธชเธธเธ”',
+            type: 'singleRowNormal',
+            containsMoreItems: true,
+            items: []
+        });
+        sectionCallback(section);
+        const results = await this.getSearchResults({ title: '', includedTags: [], excludedTags: [], parameters: {} }, { page: 1 });
+        section.items = results.results;
+        sectionCallback(section);
+    }
+    async getViewMoreItems(homepageSectionId, metadata) {
+        if (homepageSectionId !== 'latest') {
+            return App.createPagedResults({
+                results: []
+            });
+        }
+        return this.getSearchResults({ title: '', includedTags: [], excludedTags: [], parameters: {} }, metadata);
     }
     async getSearchResults(query, metadata) {
         const page = metadata?.page ?? 1;
