@@ -545,13 +545,13 @@ class GoManga extends types_1.Source {
                 .replace(/^https?:\/\/[^/]+\/?/, '')
                 .replace(/^\/|\/$/g, '');
             const rawChapterNumber = item.attr('data-num') ?? '';
-            const numberMatch = name.match(/(?:chapter|เธ•เธญเธเธ—เธตเน|เธ•เธญเธ)\s*([0-9]+(?:\.[0-9]+)?)/i);
+            const numberMatch = name.match(/(?:chapter|เน€เธโ€ขเน€เธเธเน€เธยเน€เธโ€”เน€เธเธ•เน€เธย|เน€เธโ€ขเน€เธเธเน€เธย)\s*([0-9]+(?:\.[0-9]+)?)/i);
             const chapterNumber = Number.parseFloat(rawChapterNumber || numberMatch?.[1] || '0');
             chapters.push(App.createChapter({
                 id: chapterId,
                 chapNum: chapterNumber,
                 langCode: 'th',
-                name: name || `เธ•เธญเธเธ—เธตเน ${index + 1}`,
+                name: name || `เน€เธโ€ขเน€เธเธเน€เธยเน€เธโ€”เน€เธเธ•เน€เธย ${index + 1}`,
                 time: new Date()
             }));
         });
@@ -586,7 +586,7 @@ class GoManga extends types_1.Source {
                 }
             }
             catch {
-                // เธเนเธฒเธกเธเนเธญเธกเธนเธฅเธ—เธตเนเนเธกเนเนเธเน JSON เธ—เธตเนเธ–เธนเธเธ•เนเธญเธ
+                // เน€เธยเน€เธยเน€เธเธ’เน€เธเธเน€เธยเน€เธยเน€เธเธเน€เธเธเน€เธเธเน€เธเธ…เน€เธโ€”เน€เธเธ•เน€เธยเน€เธยเน€เธเธเน€เธยเน€เธยเน€เธยเน€เธย JSON เน€เธโ€”เน€เธเธ•เน€เธยเน€เธโ€“เน€เธเธเน€เธยเน€เธโ€ขเน€เธยเน€เธเธเน€เธย
             }
         });
         return App.createChapterDetails({
@@ -598,7 +598,7 @@ class GoManga extends types_1.Source {
     async getHomePageSections(sectionCallback) {
         const section = App.createHomeSection({
             id: 'latest',
-            title: 'เธกเธฑเธเธเธฐเธญเธฑเธเน€เธ”เธ•เธฅเนเธฒเธชเธธเธ”',
+            title: 'Latest Updates',
             type: 'singleRowNormal',
             containsMoreItems: true,
             items: []
