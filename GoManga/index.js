@@ -463,7 +463,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GoManga = exports.GoMangaInfo = void 0;
 const types_1 = require("@paperback/types");
 exports.GoMangaInfo = {
-    version: '1.0.4',
+    version: '1.0.5',
     name: 'GoManga',
     icon: 'icon.png',
     author: 'fileuckigetweb',
@@ -472,6 +472,39 @@ exports.GoMangaInfo = {
     websiteBaseURL: 'https://www.go-manga.com',
     intents: types_1.SourceIntents.MANGA_CHAPTERS | types_1.SourceIntents.HOMEPAGE_SECTIONS
 };
+function parseThaiChapterDate(value) {
+    const months = {
+        'มกราคม': 0,
+        'กุมภาพันธ์': 1,
+        'มีนาคม': 2,
+        'เมษายน': 3,
+        'พฤษภาคม': 4,
+        'มิถุนายน': 5,
+        'กรกฎาคม': 6,
+        'สิงหาคม': 7,
+        'กันยายน': 8,
+        'ตุลาคม': 9,
+        'พฤศจิกายน': 10,
+        'ธันวาคม': 11
+    };
+    const text = value.replace(/\s+/g, ' ').trim();
+    const match = text.match(/^(.+?)\s+(\d{1,2}),?\s+(\d{4})$/);
+    if (!match)
+        return undefined;
+    const monthName = match[1] ?? '';
+    const month = months[monthName.trim()];
+    const day = Number(match[2]);
+    const year = Number(match[3]);
+    if (month === undefined)
+        return undefined;
+    const date = new Date(Date.UTC(year, month, day));
+    if (date.getUTCFullYear() !== year ||
+        date.getUTCMonth() !== month ||
+        date.getUTCDate() !== day) {
+        return undefined;
+    }
+    return date;
+}
 class GoManga extends types_1.Source {
     constructor() {
         super(...arguments);
@@ -499,28 +532,59 @@ class GoManga extends types_1.Source {
             .text()
             .trim();
         const infoRows = $('.infotable tr');
-        const creatorNames = [];
+        let author = '';
+        let artist = '';
+        let status = 'UNKNOWN';
         infoRows.each((_, element) => {
             const cells = $(element).find('td');
-            if (cells.length !== 2)
+            if (cells.length < 2)
                 return;
+            const label = cells.eq(0).text().trim().toLowerCase();
             const value = cells.eq(1).text().trim();
-            if (value && !/^(Ongoing|Completed|Manhwa|Manga|Manhua|\d{4})$/i.test(value)) {
-                creatorNames.push(value);
+            if (!value)
+                return;
+            if (label.includes('นักเขียน') || label.includes('author')) {
+                author = value;
+            }
+            else if (label.includes('นักวาด') || label.includes('artist')) {
+                artist = value;
+            }
+            else if (label.includes('สถานะ') || label.includes('status')) {
+                if (/ongoing/i.test(value)) {
+                    status = 'ONGOING';
+                }
+                else if (/completed|complete|finished/i.test(value)) {
+                    status = 'COMPLETED';
+                }
             }
         });
-        const author = '';
-        const artist = '';
+        const genreTags = $('.seriestugenre a').map((_, element) => {
+            const label = $(element).text().trim();
+            const href = $(element).attr('href') ?? '';
+            if (!label)
+                return null;
+            return App.createTag({
+                id: href || label.toLowerCase(),
+                label
+            });
+        }).get();
+        const tags = genreTags.length > 0
+            ? [App.createTagSection({
+                    id: 'genres',
+                    label: 'Genres',
+                    tags: genreTags
+                })]
+            : [];
         return App.createSourceManga({
             id: mangaId,
             mangaInfo: App.createMangaInfo({
                 titles: [title || mangaId],
                 image: image.startsWith('//') ? `https:${image}` : image,
-                status: 'UNKNOWN',
+                status,
                 artist,
                 author,
                 desc: description,
-                tags: []
+                tags
             })
         });
     }
@@ -535,6 +599,8 @@ class GoManga extends types_1.Source {
         const chapters = [];
         $('#chapterlist ul.clstyle > li').each((index, element) => {
             const item = $(element);
+            const dateText = item.find('.chapterdate').first().text().trim();
+            const chapterDate = parseThaiChapterDate(dateText);
             const link = item.find('a').first();
             const href = link.attr('href') ?? '';
             const name = link.find('.chapternum').first().text().trim()
@@ -552,7 +618,7 @@ class GoManga extends types_1.Source {
                 chapNum: chapterNumber,
                 langCode: 'th',
                 name: name || `เน€เธโ€ขเน€เธเธเน€เธยเน€เธโ€”เน€เธเธ•เน€เธย ${index + 1}`,
-                time: new Date()
+                ...(chapterDate ? { time: chapterDate } : {})
             }));
         });
         return chapters;
