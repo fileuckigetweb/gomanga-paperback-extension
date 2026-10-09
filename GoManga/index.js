@@ -463,7 +463,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GoManga = exports.GoMangaInfo = void 0;
 const types_1 = require("@paperback/types");
 exports.GoMangaInfo = {
-    version: '1.0.0',
+    version: '1.0.3',
     name: 'GoManga',
     icon: 'icon.png',
     author: 'fileuckigetweb',
@@ -596,25 +596,43 @@ class GoManga extends types_1.Source {
         });
     }
     async getHomePageSections(sectionCallback) {
-        const section = App.createHomeSection({
-            id: 'latest',
-            title: 'Latest Updates',
-            type: 'singleRowNormal',
-            containsMoreItems: true,
-            items: []
-        });
-        sectionCallback(section);
-        const results = await this.getSearchResults({ title: '', includedTags: [], excludedTags: [], parameters: {} }, { page: 1 });
-        section.items = results.results;
-        sectionCallback(section);
+        const sections = [
+            { id: 'popular', title: 'Popular Manga' },
+            { id: 'update', title: 'Latest Updates' },
+            { id: 'all', title: 'All Manga' }
+        ];
+        for (const item of sections) {
+            const section = App.createHomeSection({
+                id: item.id,
+                title: item.title,
+                type: 'singleRowNormal',
+                containsMoreItems: true,
+                items: []
+            });
+            sectionCallback(section);
+            const results = await this.getSearchResults({
+                title: '',
+                includedTags: [],
+                excludedTags: [],
+                parameters: {}
+            }, { page: 1, order: item.id });
+            section.items = results.results;
+            sectionCallback(section);
+        }
     }
     async getViewMoreItems(homepageSectionId, metadata) {
-        if (homepageSectionId !== 'latest') {
-            return App.createPagedResults({
-                results: []
-            });
+        if (!['popular', 'update', 'all'].includes(homepageSectionId)) {
+            return App.createPagedResults({ results: [] });
         }
-        return this.getSearchResults({ title: '', includedTags: [], excludedTags: [], parameters: {} }, metadata);
+        return this.getSearchResults({
+            title: '',
+            includedTags: [],
+            excludedTags: [],
+            parameters: {}
+        }, {
+            page: metadata?.page ?? 1,
+            order: homepageSectionId
+        });
     }
     async getSearchResults(query, metadata) {
         const page = metadata?.page ?? 1;
